@@ -18,9 +18,9 @@ contract Blastards is ERC721A, Ownable {
 
     uint256 constant public MAX_SUPPLY = 5000;
 
-    uint256 constant public WL_PRICE = 0.002 ether;
-    uint256 constant public ACTIVE_PRICE = 0.00269 ether;
-    uint256 constant public PUBLIC_PRICE = 0.00269 ether;
+    uint256 constant public WL_PRICE = 0.014 ether;
+    uint256 constant public ACTIVE_PRICE = 0.016 ether;
+    uint256 constant public PUBLIC_PRICE = 0.018 ether;
 
     uint256 public saleStartTimestampWL;
     uint256 public saleStartTimestampActive;
@@ -41,8 +41,8 @@ contract Blastards is ERC721A, Ownable {
         bytes32 _merkleRootWL,
         bytes32 _merkleRootActive
     ) ERC721A("BLASTARDS", "BLRD") Ownable(msg.sender) {
-        IBlast(BLAST).configureAutomaticYield();
-        IBlast(BLAST).configureClaimableGas();
+        // IBlast(BLAST).configureAutomaticYield();
+        // IBlast(BLAST).configureClaimableGas();
 
         saleStartTimestampWL = _saleStartTimestampWL;
         saleStartTimestampActive = _saleStartTimestampActive;
@@ -52,7 +52,7 @@ contract Blastards is ERC721A, Ownable {
 
         merkleRootWL = _merkleRootWL;
         merkleRootActive = _merkleRootActive;
-        _mint(msg.sender, 50);
+        _mint(msg.sender, 200);
     }
 
     /// ============ MAIN ============

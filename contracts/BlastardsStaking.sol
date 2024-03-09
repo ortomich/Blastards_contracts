@@ -5,6 +5,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IERC721A.sol";
 import "./IBlast.sol";
 
+import "hardhat/console.sol";
+
+interface ERC721A__IERC721Receiver {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4);
+}
+
 contract BlastardsStaking is Ownable {
 
     address private constant BLAST = 0x4300000000000000000000000000000000000002;
@@ -38,35 +49,53 @@ contract BlastardsStaking is Ownable {
         lastSnapshot[msg.sender] = block.timestamp;
         for (uint256 i = 0; i < nftIds.length; i++) {
             require(stakedBy[nftIds[i]] == msg.sender, "Not staked by you");
+
+            for (uint256 j = 0; j < stakedTokens[msg.sender].length; j++) {
+                if (stakedTokens[msg.sender][j] == nftIds[i]) {
+                    stakedTokens[msg.sender][j] = stakedTokens[msg.sender][stakedTokens[msg.sender].length - 1];
+                    stakedTokens[msg.sender].pop();
+                    break;
+                }
+            }
+
             blastards.safeTransferFrom(address(this), msg.sender, nftIds[i]);
         }
     }
 
     function points(address account) public view returns (uint256) {
+
+        if (lastSnapshot[account] == 0) {
+            return 0;
+        }
+
+        if (stakedTokens[account].length == 0) {
+            return pointsInternal[account];
+        }
+
         return pointsInternal[account] + (
-            block.timestamp - lastSnapshot[account] / 1 hours * stakedTokens[account].length * // 1 point for every staked nft per hour
+            (block.timestamp - lastSnapshot[account]) / 1 hours * // get number of hours since last snapshot
             ((block.timestamp - lastSnapshot[account]) / 30 days * 5 + 10) * // +50% for every month
-            getBalanceMultiplier(stakedTokens[account].length) / 10
+            getBalanceMultiplier(stakedTokens[account].length) / 100 // div as Balance multiplier for 1e, and month multiplier for 1e
         );
     }
 
     function getBalanceMultiplier(uint256 tokenAmount) internal pure returns (uint256) {
         if (tokenAmount >= 51) {
-            return 177;
+            return 1770;
         } else if (tokenAmount >= 41) {
-            return 145;
+            return 1450;
         } else if (tokenAmount >= 21) {
-            return 95;
+            return 950;
         } else if (tokenAmount >= 11) {
-            return 45;
+            return 450;
         } else if (tokenAmount >= 6) {
-            return 20;
+            return 200;
         } else if (tokenAmount >= 3) {
-            return 8;
+            return 80;
         } else if (tokenAmount >= 2) {
-            return 2;
+            return 25;
         } else if (tokenAmount >= 1) {
-            return 1;
+            return 10;
         } else{
             return 0;
         }
@@ -79,6 +108,10 @@ contract BlastardsStaking is Ownable {
 
     function claimAllYield(address recipient) external onlyOwner {
 		IBlast(BLAST).claimAllYield(address(this), recipient);
+    }
+
+      function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
+        return ERC721A__IERC721Receiver.onERC721Received.selector;
     }
 
 }
