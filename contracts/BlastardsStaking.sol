@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IERC721A.sol";
 import "./IBlast.sol";
-
-import "hardhat/console.sol";
 
 interface ERC721A__IERC721Receiver {
     function onERC721Received(
@@ -16,7 +14,7 @@ interface ERC721A__IERC721Receiver {
     ) external returns (bytes4);
 }
 
-contract BlastardsStaking is Ownable {
+contract BlastardsStaking is OwnableUpgradeable {
 
     address private constant BLAST = 0x4300000000000000000000000000000000000002;
 
@@ -27,7 +25,11 @@ contract BlastardsStaking is Ownable {
     mapping(address => uint256[]) public stakedTokens;
     mapping(uint256 => address) public stakedBy;
 
-    constructor(address _blastards) Ownable(msg.sender) {
+    function initialize(
+        address _blastards
+    ) external initializer {
+        __Ownable_init();
+
         IBlast(BLAST).configureAutomaticYield();
         IBlast(BLAST).configureClaimableGas();
         blastards = IERC721A(_blastards);
